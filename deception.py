@@ -10,12 +10,20 @@ def split_classes(df, category):
    return df[df['outcome_class']== category]
 
 truth_df = split_classes(df, 't')
+# print(truth_df)
+print(f'truth df shape: {truth_df.shape}')  # should be 1640 x 6
+
+# replace with a more expressive word, truthful
+truth_df['outcome_class'] = df['outcome_class'].replace('t','truthful')
 print(truth_df)
-print(f'thuth shape: {truth_df.shape}')  # should be 1640 x 6
 
 deceit_df = split_classes(df, 'd')
+# print(deceit_df)
+print(f'deceit df shape: {deceit_df.shape}')  # should be 1640 x 6
+
+# replace with a more expressive word, deceitful
+deceit_df['outcome_class'] = df['outcome_class'].replace('d','deceitful')
 print(deceit_df)
-print(f'deceit shape: {deceit_df.shape}')  # should be 1640 x 6
 
 # pick random non-repeating rows
 def randon_non_repeating(df, quantity):
@@ -25,7 +33,7 @@ def randon_non_repeating(df, quantity):
     print("non-repeating random numbers are:")
     return df.iloc[random_list]
 
-nb_samples = 4
+nb_samples = 10
 random_truth_df = randon_non_repeating(truth_df, nb_samples)
 print(f'random truth list:\n, {random_truth_df}')
 
@@ -66,7 +74,7 @@ def construct_user_content(row):
     q2 = activity_reassurance_header + new_line + row['q2'] + new_line
     return {"role": "user", "content": activity + q1 + q2}
 
-def construct_assistent_content(row):
+def construct_assistant_content(row):
     new_line = '\n'
     outcome = "Outcome:"
     return {"role": "assistant", "content": outcome + new_line + row['outcome_class']}
@@ -78,13 +86,15 @@ def construct_few_shot_prompt(df, infer_row):
 
     for _, row in df.iterrows():
         messages.append(construct_user_content(row))
-        messages.append(construct_assistent_content(row))
+        messages.append(construct_assistant_content(row))
     
     messages.append(construct_user_content(infer_row))
     return messages
 
-infer_row = df.iloc[783]   # pick a ramdom row
-print(f'Predicting the class outcome for:\n{infer_row}')
+infer_row = df.iloc[783]   # pick a random row
+# mask the outcome_class field since you want it to predict it
+infer_row['outcome_class'] = ''
+print(f'Inferring the `class_outcome` for:\n{infer_row}')
 
 prompt = construct_few_shot_prompt(random_truth_deceit_df, infer_row=infer_row)
 for message in prompt:
