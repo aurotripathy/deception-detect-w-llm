@@ -104,7 +104,8 @@ for message in prompt:
 import openai
 import os
 openai.api_key = os.environ["OPENAI_API_KEY"]
-MODEL = "gpt-3.5-turbo"
+# MODEL = "gpt-3.5-turbo"
+MODEL = "gpt-4"
 response = openai.ChatCompletion.create(
     model=MODEL,
     messages=prompt,
@@ -115,3 +116,5 @@ response = openai.ChatCompletion.create(
 print(f'ENTIRE RESPONSE:\n {response}')
 
 print(f"Content response:\n {response['choices'][0]['message']['content']}")
+
+print(f'Model is use: {MODEL}')
