@@ -92,8 +92,9 @@ def construct_few_shot_prompt(df, infer_row):
     messages.append(construct_assistant_content(infer_row)) # has to have a black outcome to be filled by the llm
     return messages
 
-infer_row = df.iloc[10]   # pick a random row
+infer_row = df.iloc[0]  # pick a random row
 print(f'Inferring the `class_outcome` for:\n{infer_row}')
+ground_truth = 'truthful' if infer_row['outcome_class'] == 't' else 'deceitful'
 # mask the `outcome_class` field since you want to predict it
 infer_row['outcome_class'] = ''
 
@@ -116,6 +117,5 @@ response = openai.ChatCompletion.create(
 
 print(f'ENTIRE RESPONSE:\n {response}')
 
-print(f"Content response:\n {response['choices'][0]['message']['content']}")
-
-print(f'Model is use: {MODEL}')
+print(f"LLM  model {MODEL} responsed with :\n {response['choices'][0]['message']['content']}")
+print(f'Ground Truth: {ground_truth}')
