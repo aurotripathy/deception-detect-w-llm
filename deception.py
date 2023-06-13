@@ -89,12 +89,13 @@ def construct_few_shot_prompt(df, infer_row):
         messages.append(construct_assistant_content(row))
     
     messages.append(construct_user_content(infer_row))
+    messages.append(construct_assistant_content(infer_row)) # has to have a black outcome to be filled by the llm
     return messages
 
-infer_row = df.iloc[783]   # pick a random row
-# mask the outcome_class field since you want it to predict it
-infer_row['outcome_class'] = ''
+infer_row = df.iloc[10]   # pick a random row
 print(f'Inferring the `class_outcome` for:\n{infer_row}')
+# mask the `outcome_class` field since you want to predict it
+infer_row['outcome_class'] = ''
 
 prompt = construct_few_shot_prompt(random_truth_deceit_df, infer_row=infer_row)
 for message in prompt:
