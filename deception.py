@@ -6,10 +6,10 @@ print(df.columns)
 print(f'shape: {df.shape}')  # should be 1640 x 6
 
 
-def split_classes(df, category):
+def filter_by_class(df, category):
    return df[df['outcome_class']== category]
 
-truth_df = split_classes(df, 't')
+truth_df = filter_by_class(df, 't')
 # print(truth_df)
 print(f'truth df shape: {truth_df.shape}')  # should be 1640 x 6
 
@@ -17,7 +17,7 @@ print(f'truth df shape: {truth_df.shape}')  # should be 1640 x 6
 truth_df['outcome_class'] = df['outcome_class'].replace('t','truthful')
 print(truth_df)
 
-deceit_df = split_classes(df, 'd')
+deceit_df = filter_by_class(df, 'd')
 # print(deceit_df)
 print(f'deceit df shape: {deceit_df.shape}')  # should be 1640 x 6
 
