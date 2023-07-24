@@ -58,6 +58,9 @@ def create_prelude():
     return prelude
 
 def create_input(row):
+    """
+    For now conbine question1 and question 2
+    """
     pass
 
 def create_clues(row):
