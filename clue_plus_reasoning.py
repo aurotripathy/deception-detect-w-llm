@@ -81,4 +81,5 @@ for index, row in df.iterrows():
         # print(row['clues'], row['reasoning'])
         create_one_of_k_shots(row)
 
-setup_inference(row_n)
+inference_row = 7  # some random row
+setup_inference(inference_row)
