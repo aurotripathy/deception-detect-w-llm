@@ -39,9 +39,12 @@ df = pd.read_csv ('dataset/dataset_plus_filtered_liwc.csv')
 print(f'shape: {df.shape}')  # should be 1640 x 6
 # print(df.head)
 
+count = 0
 for index, row in df.iterrows():
     if row['has_clues']==1:
-        print(row['clues'], row['reasoning'])
+        count += 1
+        print(f"[{row['id'] + 1}], {row['clues']}, {row['reasoning']}")
+print(f'Count: {count}')
 
 word_limit = 50
 # print the prelude
@@ -61,28 +64,39 @@ def create_input(row):
     """
     For now conbine question1 and question 2
     """
-    pass
+    return 'INPUT: ' + row['q1'] + '\n' + row['q2']
 
 def create_clues(row):
-    pass
+    """
+    use the style from the paper
+    """
+    return 'CLUES'  + ': ' + row['clues']
 
 def create_reasoning(row):
-    pass
+    return 'REASONING' + ': ' + row['reasoning']
+
+def setup_classification(row):
+    return('CLASSIFICATION: ' + ('truthful' if row['outcome_class'] == 't' else 'deceptive'))
 
 def create_one_of_k_shots(row):
-    create_input(row)
-    create_clues(row)
-    create_reasoning(row)
+    print(create_input(row))
+    print(create_clues(row))
+    print(create_reasoning(row))
+    print(setup_classification(row))
 
 def setup_inference(row):
-    pass
+    print(create_input(row))
+    print('CLUES:')
+    print('REASONING: ')
+    print('CLASSIFICATION:')
 
-create_prelude()
+print(create_prelude())
 
 for index, row in df.iterrows():
     if row['has_clues']==1:
         # print(row['clues'], row['reasoning'])
         create_one_of_k_shots(row)
+        print('\n')
 
-inference_row = 7  # some random row
-setup_inference(inference_row)
+inference_row = 26  # some random row
+setup_inference(df.loc[inference_row].copy())
