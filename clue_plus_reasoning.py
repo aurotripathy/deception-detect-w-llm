@@ -46,25 +46,27 @@ for index, row in df.iterrows():
         print(f"[{row['id'] + 1}], {row['clues']}, {row['reasoning']}")
 print(f'Count: {count}')
 
-word_limit = 50
+newline = '\n'
+reasoning_word_limit = 50
 # print the prelude
 prelude = f"""
 This is an overall classifier for truthful and deceptive statements.
 First, present CLUES (i.e., keywords, phrases, contextual information, semantic relations, semantic meaning,
 tones, references) that support the classification determination of the input.
 Second, deduce a diagnostic REASONING process from premises (i.e., clues, input) that supports the classification
-determination (Limit the number of words to {word_limit}).
+determination (Limit the number of words to {reasoning_word_limit}).
 Third, determine the overall CLASSIFICATION of INPUT as Truthful or Deceptive considering CLUES, the REASONING
 process and the INPUT.
 """
 def create_prelude():
-    return prelude
+    return prelude + newline
 
 def create_input(row):
     """
     For now conbine question1 and question 2
     """
     return 'INPUT: ' + row['q1'] + '\n' + row['q2']
+    # return 'INPUT: ' + row['q2']
 
 def create_clues(row):
     """
@@ -79,24 +81,47 @@ def setup_classification(row):
     return('CLASSIFICATION: ' + ('truthful' if row['outcome_class'] == 't' else 'deceptive'))
 
 def create_one_of_k_shots(row):
+    k_shot = ''
     print(create_input(row))
     print(create_clues(row))
     print(create_reasoning(row))
     print(setup_classification(row))
+    k_shot += create_input(row) + newline
+    k_shot += create_clues(row) + newline
+    k_shot += create_reasoning(row) + newline
+    k_shot += setup_classification(row) + newline
+    return k_shot
+
 
 def setup_inference(row):
     print(create_input(row))
     print('CLUES:')
     print('REASONING: ')
     print('CLASSIFICATION:')
+    inference = ''
+    inference += create_input(row) + newline
+    inference += 'CLUES:' + newline
+    inference += 'REASONING: ' + newline
+    inference += 'CLASSIFICATION:' + newline
+    return inference
 
-print(create_prelude())
 
-for index, row in df.iterrows():
-    if row['has_clues']==1:
-        # print(row['clues'], row['reasoning'])
-        create_one_of_k_shots(row)
-        print('\n')
+def setup_context(inference_row):
+    context = ''
+    print(create_prelude())
+    context += create_prelude()
+    for index, row in df.iterrows():
+        if row['has_clues']==1:
+            # print(row['clues'], row['reasoning'])
+            create_one_of_k_shots(row)
+            context += create_one_of_k_shots(row)
+            print('\n')
+            context += newline
+    
+    context += setup_inference(df.loc[inference_row].copy())
+    return context
 
-inference_row = 26  # some random row
-setup_inference(df.loc[inference_row].copy())
+if __name__ == "__main__":
+    final_context = setup_context(inference_row=788)
+    print('***********buffer version**********')
+    print(final_context)
