@@ -66,13 +66,12 @@ def create_input(row):
     For now conbine question1 and question 2
     """
     return 'INPUT: ' + row['q1'] + '\n' + row['q2']
-    # return 'INPUT: ' + row['q2']
 
 def create_clues(row):
     """
     use the style from the paper
     """
-    return 'CLUES'  + ': ' + row['clues']
+    return 'CLUES: ' + row['clues']
 
 def create_reasoning(row):
     return 'REASONING' + ': ' + row['reasoning']
@@ -82,10 +81,6 @@ def setup_classification(row):
 
 def create_one_of_k_shots(row):
     k_shot = ''
-    print(create_input(row))
-    print(create_clues(row))
-    print(create_reasoning(row))
-    print(setup_classification(row))
     k_shot += create_input(row) + newline
     k_shot += create_clues(row) + newline
     k_shot += create_reasoning(row) + newline
@@ -94,10 +89,6 @@ def create_one_of_k_shots(row):
 
 
 def setup_inference(row):
-    print(create_input(row))
-    print('CLUES:')
-    print('REASONING: ')
-    print('CLASSIFICATION:')
     inference = ''
     inference += create_input(row) + newline
     inference += 'CLUES:' + newline
