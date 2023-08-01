@@ -31,6 +31,10 @@ reasoning:
 sentiment: 
 """
 
+from openai_interface import init_openai, get_chat_completion_with_backoff
+
+init_openai()
+
 import pandas as pd
 df = pd.read_csv ('dataset/dataset_plus_filtered_liwc.csv')
 # simple EDA
@@ -113,6 +117,8 @@ def setup_context(inference_row):
     return context
 
 if __name__ == "__main__":
-    final_context = setup_context(inference_row=788)
+    final_context = setup_context(inference_row=10)
     print('***********buffer version**********')
     print(final_context)
+
+    print(get_chat_completion_with_backoff(final_context, model='gpt-4'))
