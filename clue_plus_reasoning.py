@@ -32,6 +32,7 @@ sentiment:
 """
 
 from openai_interface import init_openai, get_chat_completion_with_backoff
+from parse_output import parsed_response_str
 
 init_openai()
 
@@ -93,6 +94,7 @@ def create_one_of_k_shots(row):
 
 
 def setup_inference(row):
+    """ we leave CLUEs, REASINING, and CLASSIFICATION blank for the LLM to fill up"""
     inference = ''
     inference += create_input(row) + newline
     inference += 'CLUES:' + newline
@@ -103,22 +105,37 @@ def setup_inference(row):
 
 def setup_context(inference_row):
     context = ''
-    print(create_prelude())
+    # print(create_prelude())
     context += create_prelude()
     for index, row in df.iterrows():
-        if row['has_clues']==1:
+        if row['has_clues'] == 1:
             # print(row['clues'], row['reasoning'])
-            create_one_of_k_shots(row)
+            # create_one_of_k_shots(row)
             context += create_one_of_k_shots(row)
-            print('\n')
+            # print('\n')
             context += newline
     
     context += setup_inference(df.loc[inference_row].copy())
     return context
 
-if __name__ == "__main__":
-    final_context = setup_context(inference_row=10)
-    print('***********buffer version**********')
-    print(final_context)
 
-    print(get_chat_completion_with_backoff(final_context, model='gpt-4'))
+ground_truths = []
+predictions = []
+
+if __name__ == "__main__":
+    for row in range(10, 11):
+
+        final_context = setup_context(inference_row=row)
+        ground_truth = 'truthful' if df.loc[row]['outcome_class'] == 't' else 'deceptive'
+        # print(final_context)
+
+        response = get_chat_completion_with_backoff(final_context, model='gpt-4')
+        print(response)
+        dict_response = parsed_response_str(response)
+        print(dict_response)
+        ground_truths.append(ground_truth)
+        predictions.append(dict_response['CLASSIFICATION'].lstrip(' '))
+
+for ground_truth, prediction in zip(ground_truths, predictions):
+    print(ground_truth, prediction)
+
