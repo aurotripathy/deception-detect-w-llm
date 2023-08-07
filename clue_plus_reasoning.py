@@ -103,7 +103,8 @@ def setup_inference(row):
     return inference
 
 
-def setup_context(inference_row):
+def construct_context(inference_row):
+    """ constructs the k-shots and the section that has to inferred"""
     context = ''
     # print(create_prelude())
     context += create_prelude()
@@ -121,15 +122,19 @@ def setup_context(inference_row):
 
 ground_truths = []
 predictions = []
-
 if __name__ == "__main__":
-    for row in range(20, 30):
+    start_row, end_row = 900, 910
+    model = 'gpt-4'  # "gpt-3.5-turbo" or "gpt-4"
+    print(f'start row: {start_row} end row: {end_row}')
+    print(f'Model:{model}')
+    for row in range(start_row, end_row):
 
-        final_context = setup_context(inference_row=row)
+        final_context = construct_context(inference_row=row)
         ground_truth = 'truthful' if df.loc[row]['outcome_class'] == 't' else 'deceptive'
-        print(f'ground truth " {ground_truth}')
+        print(f'ground truth (GT): {ground_truth}')
+        print(f'INPUT:\n Q1:\n {df.loc[row]["q1"]} \n Q2:\n {df.loc[row]["q2"]}')
 
-        response = get_chat_completion_with_backoff(final_context, model='gpt-4')
+        response = get_chat_completion_with_backoff(final_context, model=model)
         print(response + newline)
         dict_response = parsed_response_str(response)
         # print(dict_response)
@@ -137,5 +142,7 @@ if __name__ == "__main__":
         predictions.append(dict_response['CLASSIFICATION'].lstrip(' '))
 
 for ground_truth, prediction in zip(ground_truths, predictions):
-    print(ground_truth, prediction)
+    print(f'GT: {ground_truth}, Pred: {prediction}')
 
+from sklearn.metrics import f1_score
+print('Weighted F1-score:', f1_score(ground_truths, predictions, average='weighted'))
