@@ -4,12 +4,14 @@ very brittle for now, need to fix
 """
 
 import re
-def split_response_str(response):
+def parsed_response_str(response):
     delims = ['CLUES:', '\nREASONING:', '\nCLASSIFICATION:']
     delims_clean = ['CLUES', 'REASONING', 'CLASSIFICATION']
     pattern = '|'.join(delims)
     result = re.split(pattern, response)
     result_list = list(filter(None, result))  # filter out the initial empty string
+    # print(result_list)
+    # print(delims)
     if len(result_list) != len(delims):
         print(len(result_list), len(delims))
         exit('something went wrong')
@@ -28,5 +30,5 @@ CLASSIFICATION: truthful"""
 
     print(type(response))
 
-    print(split_response_str(response))
+    print(parsed_response_str(response))
 
