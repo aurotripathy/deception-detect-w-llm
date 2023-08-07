@@ -123,16 +123,16 @@ ground_truths = []
 predictions = []
 
 if __name__ == "__main__":
-    for row in range(10, 11):
+    for row in range(20, 30):
 
         final_context = setup_context(inference_row=row)
         ground_truth = 'truthful' if df.loc[row]['outcome_class'] == 't' else 'deceptive'
-        # print(final_context)
+        print(f'ground truth " {ground_truth}')
 
         response = get_chat_completion_with_backoff(final_context, model='gpt-4')
-        print(response)
+        print(response + newline)
         dict_response = parsed_response_str(response)
-        print(dict_response)
+        # print(dict_response)
         ground_truths.append(ground_truth)
         predictions.append(dict_response['CLASSIFICATION'].lstrip(' '))
 
