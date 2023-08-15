@@ -32,7 +32,7 @@ def create_prelude(gt):
 In the PARAGRAPH below, 
 First, highlight in the JSON format, words or phrases related to the TRUTHFUL and DECEPTIVE categories.
 Treat each sub-category within the two categories in order of decreasing importance.
-Next, provide a detailed reason that the paragraph is truthful based on what you find in the sub-categories below.
+Next, provide a detailed reason that the paragraph is {gt} based on what you find in the sub-categories below.
 Finally, in one word, make a decisive classification on whether the paragraph is TRUTHFUL or DECEPTIVE. 
 TRUTHFUL
 ingestion - examples are: " dish", "eat", "pizza"
@@ -72,7 +72,7 @@ def construct_context(row, gt):
 if __name__ == "__main__":
     ground_truths = []
     predictions = []
-    start_row, end_row = 1, 2
+    start_row, end_row = 900, 901
     model = 'gpt-4'  # "gpt-3.5-turbo" or "gpt-4"
     print(f'start row: {start_row} end row: {end_row}')
     print(f'Model:{model}')
@@ -81,18 +81,10 @@ if __name__ == "__main__":
         ground_truth = 'truthful' if df.loc[row]['outcome_class'] == 't' else 'deceptive'
         final_context = construct_context(row=row, gt=ground_truth)
         print(final_context)
-        # print(f'ground truth (GT): {ground_truth}')
-        # print(f'INPUT:\n Q1:\n {df.loc[row]["q1"]} \n Q2:\n {df.loc[row]["q2"]}')
+        print(f'ground truth (GT): {ground_truth}')
+        print(f'INPUT:\n Q1:\n {df.loc[row]["q1"]} \n Q2:\n {df.loc[row]["q2"]}')
 
         response = get_chat_completion_with_backoff(final_context, model=model)
         print(response + newline)
-        # dict_response = parsed_response_str(response)
-        # # print(dict_response)
-        # ground_truths.append(ground_truth)
-        # predictions.append(dict_response['CLASSIFICATION'].lstrip(' '))
 
-# for ground_truth, prediction in zip(ground_truths, predictions):
-#     print(f'GT: {ground_truth}, Pred: {prediction}')
 
-# from sklearn.metrics import f1_score
-# print('Weighted F1-score:', f1_score(ground_truths, predictions, average='weighted'))
