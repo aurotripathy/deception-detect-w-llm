@@ -29,9 +29,10 @@ newline = '\n'
 # print the prelude
 def create_prelude(gt):
     prelude = f"""
-In the PARAGRAPH below, 
+In the PARAGRAPH section below: 
 First, highlight in the JSON format, words or phrases related to the TRUTHFUL and DECEPTIVE categories.
 Treat each sub-category within the two categories in order of decreasing importance.
+List each category even if it it's empty.
 Next, provide a detailed reason that the paragraph is {gt} based on what you find in the sub-categories below.
 Finally, in one word, make a decisive classification on whether the paragraph is TRUTHFUL or DECEPTIVE. 
 TRUTHFUL
@@ -72,17 +73,17 @@ def construct_context(row, gt):
 if __name__ == "__main__":
     ground_truths = []
     predictions = []
-    start_row, end_row = 900, 901
+    start_row, end_row = 911, 912
     model = 'gpt-4'  # "gpt-3.5-turbo" or "gpt-4"
     print(f'start row: {start_row} end row: {end_row}')
     print(f'Model:{model}')
     for row in range(start_row, end_row):
-
+        print(f"{20*'-'}{row}{20*'-'}")
         ground_truth = 'truthful' if df.loc[row]['outcome_class'] == 't' else 'deceptive'
         final_context = construct_context(row=row, gt=ground_truth)
         print(final_context)
         print(f'ground truth (GT): {ground_truth}')
-        print(f'INPUT:\n Q1:\n {df.loc[row]["q1"]} \n Q2:\n {df.loc[row]["q2"]}')
+        # print(f'INPUT:\n Q1:\n {df.loc[row]["q1"]} \n Q2:\n {df.loc[row]["q2"]}')
 
         response = get_chat_completion_with_backoff(final_context, model=model)
         print(response + newline)
