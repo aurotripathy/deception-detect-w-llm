@@ -9,7 +9,7 @@ Adding the CLUES and REASONING column genersted by the LLM and
 calling it,
 """
 
-
+import json
 from openai_interface import init_openai, get_chat_completion_with_backoff
 from parse_output import parsed_response_str
 
@@ -32,9 +32,12 @@ def create_prelude(gt):
 In the PARAGRAPH section below: 
 First, highlight in the JSON format, words or phrases related to the TRUTHFUL and DECEPTIVE categories.
 Treat each sub-category within the two categories in order of decreasing importance.
-List each category even if it it's empty.
-Next, provide a detailed reason that the paragraph is {gt} based on what you find in the sub-categories below.
-Finally, in one word, make a decisive classification on whether the paragraph is TRUTHFUL or DECEPTIVE. 
+List each sub-category even if it it's empty.
+Next, provide a detailed reason as to why the paragraph is {gt} based on what you find in the sub-categories below.
+Finally, in one word, make a final classification on whether the paragraph is TRUTHFUL or DECEPTIVE. 
+Generate the final resposen in the JSON format with keys"TRUTHFUL", "DECEPTIVE", "REASONING", "CLASSIFICATION"
+
+
 TRUTHFUL
 ingestion - examples are: " dish", "eat", "pizza"
 biological-processes - examples are: "eat", "blood", "pain"
@@ -48,7 +51,7 @@ reward  - examples are, "congratulate", "accomplishment" , "take", "prize", "ben
 pronouns - examples are, "I", "them", "itself"
 personal-pronouns - examples are, "I", "them", "her"
 exclamation-mark - example is, "!"
-    """
+"""
 
     return prelude + newline
 
@@ -73,7 +76,7 @@ def construct_context(row, gt):
 if __name__ == "__main__":
     ground_truths = []
     predictions = []
-    start_row, end_row = 911, 912
+    start_row, end_row = 50, 51
     model = 'gpt-4'  # "gpt-3.5-turbo" or "gpt-4"
     print(f'start row: {start_row} end row: {end_row}')
     print(f'Model:{model}')
@@ -86,6 +89,20 @@ if __name__ == "__main__":
         # print(f'INPUT:\n Q1:\n {df.loc[row]["q1"]} \n Q2:\n {df.loc[row]["q2"]}')
 
         response = get_chat_completion_with_backoff(final_context, model=model)
+        print(f'Response---------------------\n')
         print(response + newline)
+        try:
+            parse = json.loads(str)
+        except:
+            print(f'Encountered a parsing exception!')
+        print(f'-------------row: {row}----------------')
+        print(parse['TRUTHFUL'])
+        print(parse['DECEPTIVE'])
+        print(parse['REASONING'])
+        print(parse['CLASSIFICATION'])
+        clues_dict = {"TRUTHFUL": parse['DECEPTIVE']}
+        print(clues_dict)
+
+
 
 
