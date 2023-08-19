@@ -35,8 +35,7 @@ Treat each sub-category within the two categories in order of decreasing importa
 List each sub-category even if it it's empty.
 Next, provide a detailed reason as to why the paragraph is {gt} based on what you find in the sub-categories below.
 Finally, in one word, make a final classification on whether the paragraph is TRUTHFUL or DECEPTIVE. 
-Generate the final resposen in the JSON format with keys"TRUTHFUL", "DECEPTIVE", "REASONING", "CLASSIFICATION"
-
+Generate the final response in the JSON format with keys, "TRUTHFUL", "DECEPTIVE", "REASONING", "CLASSIFICATION"
 
 TRUTHFUL
 ingestion - examples are: " dish", "eat", "pizza"
