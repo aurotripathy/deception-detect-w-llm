@@ -92,7 +92,7 @@ if __name__ == "__main__":
         print(f'Response---------------------\n')
         print(response + newline)
         try:
-            parse = json.loads(str)
+            parse = json.loads(response)
         except:
             print(f'Encountered a parsing exception!')
         print(f'-------------row: {row}----------------')
