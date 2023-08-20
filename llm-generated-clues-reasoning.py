@@ -12,10 +12,12 @@ calling it,
 import json
 from openai_interface import init_openai, get_chat_completion_with_backoff
 from parse_output import parsed_response_str
+from llm_generated_clues_reason_output import prep_output_df, save_output_df, parse_n_write_response
 
 init_openai()
 
 dataset_used = 'dataset/sign_events_data_statements.csv'
+llm_generated_dataset = 'dataset/llm_generated_clues_reasoning_events_data_statements.csv'
 
 import pandas as pd
 df = pd.read_csv (dataset_used)
@@ -75,7 +77,9 @@ def construct_context(row, gt):
 if __name__ == "__main__":
     ground_truths = []
     predictions = []
-    start_row, end_row = 50, 51
+    start_row, end_row = 0, 1
+    out_df = prep_output_df(dataset_used, ['contains_clues', 'clues', 'reasoning'])
+
     model = 'gpt-4'  # "gpt-3.5-turbo" or "gpt-4"
     print(f'start row: {start_row} end row: {end_row}')
     print(f'Model:{model}')
@@ -90,18 +94,8 @@ if __name__ == "__main__":
         response = get_chat_completion_with_backoff(final_context, model=model)
         print(f'Response---------------------\n')
         print(response + newline)
-        try:
-            parse = json.loads(response)
-        except:
-            print(f'Encountered a parsing exception!')
-        print(f'-------------row: {row}----------------')
-        print(parse['TRUTHFUL'])
-        print(parse['DECEPTIVE'])
-        print(parse['REASONING'])
-        print(parse['CLASSIFICATION'])
-        clues_dict = {"TRUTHFUL": parse['DECEPTIVE']}
-        print(clues_dict)
+        out_df = parse_n_write_response(response, out_df, row)
+        save_output_df(llm_generated_dataset, out_df)
 
-
-
+save_output_df(llm_generated_dataset, out_df)
 
