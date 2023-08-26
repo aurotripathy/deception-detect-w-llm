@@ -14,12 +14,16 @@ def init_openai():
 
 
 def get_chat_completion(prompt, model="gpt-3.5-turbo"):
-    messages = [{"role": "user", "content": prompt}]
+    # messages = [{"role": "user", "content": prompt}]
+    messages = [{"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt}]
+
     response = openai.ChatCompletion.create(
         model=model,
         messages=messages,
         temperature=0, # this is the degree of randomness of the model's output
     )
+    # print(f'response:\n{response}')
     return response.choices[0].message["content"]
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
