@@ -36,13 +36,15 @@ def parse_n_write_response(response, df, row):
     print(parse['DECEPTIVE'])
     print(parse['REASONING'])
     print(parse['CLASSIFICATION'])
-    clues_dict = {"TRUTHFUL": parse['TRUTHFUL'], "DECEPTIVE": parse['DECEPTIVE']}
+    classification_dict = {"classification":  'truthful' if df.loc[row]['outcome_class'] == 't' else 'deceptive'}
+    clues_dict = {"CLUES": {"TRUTHFUL": parse['TRUTHFUL'], "DECEPTIVE": parse['DECEPTIVE']}}
     reasoning_dict = {"REASONING": parse['REASONING']}
     print(clues_dict)
     copy_df = df.copy(deep=True)
     copy_df.at[row, 'contains_clues'] = 1
-    copy_df.at[row, 'clues'] = clues_dict
-    copy_df.at[row, 'reasoning'] = reasoning_dict
+    copy_df.at[row, 'clues'] = json.dumps(clues_dict)
+    copy_df.at[row, 'reasoning'] = json.dumps(reasoning_dict)
+    copy_df.at[row, 'classification'] = json.dumps(classification_dict)
     return copy_df
 
 def create_dummy_response():
