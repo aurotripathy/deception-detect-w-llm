@@ -24,6 +24,9 @@ def get_chat_completion(prompt, model="gpt-3.5-turbo"):
         temperature=0, # this is the degree of randomness of the model's output
     )
     # print(f'response:\n{response}')
+    print(f'Prompt tokens counted:{response["usage"]["prompt_tokens"]} ')
+    print(f'Completion tokens counted: {response["usage"]["completion_tokens"]}')
+    print(f'Total tokens counted: {response["usage"]["total_tokens"]}')    
     return response.choices[0].message["content"]
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
