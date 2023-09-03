@@ -95,5 +95,8 @@ if __name__ == "__main__":
             temperature=0,
             max_tokens=1,  # We're Only Counting Input Tokens Here, So Let's Not Waste Tokens On The Output
         )
+        print(f'Response:\n{response}')
         print(F'{response["usage"]["prompt_tokens"]} Prompt Tokens Counted By The Openai Api.')
+        print(F'{response["usage"]["completion_tokens"]} Completion Tokens Counted By The Openai Api.')
+        print(F'{response["usage"]["total_tokens"]} Total Tokens Counted By The Openai Api.')
         print()    
