@@ -40,6 +40,7 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
 
+
 # let's verify the function above matches the OpenAI API response
 if __name__ == "__main__":
 
@@ -47,32 +48,32 @@ if __name__ == "__main__":
 
     example_messages = [
         {
-            "Role": "System",
-            "Content": "You Are A Helpful, Pattern-Following Assistant That Translates Corporate Jargon Into Plain English.",
+            "role": "system",
+            "content": "You are a helpful, pattern-following assistant that translates corporate jargon into plain English.",
         },
         {
-            "Role": "System",
-            "Name": "Example_User",
-            "Content": "New Synergies Will Help Drive Top-Line Growth.",
+            "role": "system",
+            "name": "example_user",
+            "content": "New synergies will help drive top-line growth.",
         },
         {
-            "Role": "System",
-            "Name": "Example_Assistant",
-            "Content": "Things Working Well Together Will Increase Revenue.",
+            "role": "system",
+            "name": "example_assistant",
+            "content": "Things working well together will increase revenue.",
         },
         {
-            "Role": "System",
-            "Name": "Example_User",
-            "Content": "Let's Circle Back When We Have More Bandwidth To Touch Base On Opportunities For Increased Leverage.",
+            "role": "system",
+            "name": "example_user",
+            "content": "Let's circle back when we have more bandwidth to touch base on opportunities for increased leverage.",
         },
         {
-            "Role": "System",
-            "Name": "Example_Assistant",
-            "Content": "Let's Talk Later When We're Less Busy About How To Do Better.",
+            "role": "system",
+            "name": "example_assistant",
+            "content": "Let's talk later when we're less busy about how to do better.",
         },
         {
-            "Role": "User",
-            "Content": "This Late Pivot Means We Don't Have Time To Boil The Ocean For The Client Deliverable.",
+            "role": "user",
+            "content": "This late pivot means we don't have time to boil the ocean for the client deliverable.",
         },
     ]
 
@@ -91,8 +92,8 @@ if __name__ == "__main__":
         response = openai.ChatCompletion.create(
             model = model,
             messages = example_messages,
-            Temperature=0,
-            Max_Tokens=1,  # We're Only Counting Input Tokens Here, So Let's Not Waste Tokens On The Output
+            temperature=0,
+            max_tokens=1,  # We're Only Counting Input Tokens Here, So Let's Not Waste Tokens On The Output
         )
-        print(F'{response["Usage"]["Prompt_Tokens"]} Prompt Tokens Counted By The Openai Api.')
+        print(F'{response["usage"]["prompt_tokens"]} Prompt Tokens Counted By The Openai Api.')
         print()    
