@@ -60,7 +60,7 @@ for index, row in df.iterrows():
 print(f'Count: {count}')
 
 newline = '\n'
-reasoning_word_limit = 50
+reasoning_word_limit = 100
 # print the prelude
 prelude = f"""
 This is an overall classifier for truthful and deceptive statements.
@@ -114,22 +114,35 @@ def setup_inference(row):
 
 
 def construct_context(inference_row, k_shot_count):
-    """ constructs the k-shots and the section that has to inferred
-        The k is determined by the has_clues flag, this will change...
+    """ constructs the k-shots and the extra shot that needs to be inferred
+        The k is determined by the has_clues flag, this scheme will change in the future...
+        Ensure k is even, since we pick up k//2 truthful and k//2 deceptive shots for balance
     """
     context = ''
     # print(create_prelude())
     context += create_prelude()
+    # Go thru each category separately
     count = 0
     for index, row in df.iterrows():
-        if row['contains_clues'] == 1:
+        if row['contains_clues'] == 1 and row['outcome_class'] == 't':
             # print(row['clues'], row['reasoning'])
             # create_one_of_k_shots(row)
             context += create_one_of_k_shots(row)
             count += 1
             # print('\n')
             context += newline
-        if count == k_shot_count:
+        if count == k_shot_count // 2:
+            break
+    count = 0
+    for index, row in df.iterrows():
+        if row['contains_clues'] == 1 and row['outcome_class'] == 'd':
+            # print(row['clues'], row['reasoning'])
+            # create_one_of_k_shots(row)
+            context += create_one_of_k_shots(row)
+            count += 1
+            # print('\n')
+            context += newline
+        if count == k_shot_count // 2:
             break
 
     context += setup_inference(df.loc[inference_row].copy())
@@ -137,22 +150,21 @@ def construct_context(inference_row, k_shot_count):
 
 
 if __name__ == "__main__":
-    k_shot_count = 3
+    k_shot_count = 10  # note: 'k // 2' are from each category
     ground_truths = []
     predictions = []
-    start_row, end_row = 900, 920
+    start_row, end_row = 901, 905
     model = 'gpt-4'  # "gpt-3.5-turbo" or "gpt-4"
     print(f'start row: {start_row} end row: {end_row}')
     print(f'Model:{model}')
     for row in range(start_row, end_row):
-        print(f"{20*'-'}{row} context GT {20*'-'}")
         final_context = construct_context(row, k_shot_count)
-        print(final_context)
         ground_truth = 'truthful' if df.loc[row]['outcome_class'] == 't' else 'deceptive'
-        print(f'ground truth (GT): {ground_truth}')
+        print(f"{20*'-'}row: {row} context GT: {ground_truth} {20*'-'}")
+        print(final_context)
 
         response = get_chat_completion_with_backoff(final_context, model=model)
-        print(f"{20*'>'}{row} response GT {20*'>'}")
+        print(f"{20*'>'}{row} response GT: {ground_truth} {20*'>'}")
         print(response + newline)
         
         predicted_class = extract_classification(response)
