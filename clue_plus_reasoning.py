@@ -39,6 +39,7 @@ sentiment:
 from openai_interface import init_openai, get_chat_completion_with_backoff
 from parse_output import extract_classification
 import json
+from token_count import nb_tokens_in_prompt
 
 init_openai()
 
@@ -153,7 +154,7 @@ if __name__ == "__main__":
     k_shot_count = 10  # note: 'k // 2' are from each category
     ground_truths = []
     predictions = []
-    start_row, end_row = 901, 905
+    start_row, end_row = 901, 902
     model = 'gpt-4'  # "gpt-3.5-turbo" or "gpt-4"
     print(f'start row: {start_row} end row: {end_row}')
     print(f'Model:{model}')
@@ -162,6 +163,7 @@ if __name__ == "__main__":
         ground_truth = 'truthful' if df.loc[row]['outcome_class'] == 't' else 'deceptive'
         print(f"{20*'-'}row: {row} context GT: {ground_truth} {20*'-'}")
         print(final_context)
+        print(f"Prompt tokens counted by tiktoken: {nb_tokens_in_prompt(final_context, model)}.")
 
         response = get_chat_completion_with_backoff(final_context, model=model)
         print(f"{20*'>'}{row} response GT: {ground_truth} {20*'>'}")
