@@ -41,6 +41,38 @@ def num_tokens_from_messages(messages, model="gpt-3.5-turbo-0613"):
     return num_tokens
 
 
+def nb_tokens_in_prompt(prompt, model="gpt-3.5-turbo-0613") -> int:
+    """Return the number of tokens is a prompt
+    Per docs, "Consider the counts from the function below an estimate, not a timeless guarantee."
+    """
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        print("Warning: model not found. Using cl100k_base encoding.")
+        encoding = tiktoken.get_encoding("cl100k_base")
+    if model in {
+        "gpt-3.5-turbo-0613",
+        "gpt-3.5-turbo-16k-0613",
+        "gpt-4-0314",
+        "gpt-4-32k-0314",
+        "gpt-4-0613",
+        "gpt-4-32k-0613",
+        "gpt-3.5-turbo-0301",    
+        }:
+        num_tokens = len(encoding.encode(prompt))
+    elif "gpt-3.5-turbo" in model:
+        print("Warning: gpt-3.5-turbo may update over time. Returning num tokens assuming gpt-3.5-turbo-0613.")
+        num_tokens = len(encoding.encode(prompt))
+    elif "gpt-4" in model:
+        print("Warning: gpt-4 may update over time. Returning num tokens assuming gpt-4-0613.")
+        num_tokens = len(encoding.encode(prompt))
+    else:
+        raise NotImplementedError(
+            f"""num_tokens_from_messages() is not implemented for model {model}. See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens."""
+        )
+    return num_tokens
+
+
 # let's verify the function above matches the OpenAI API response
 if __name__ == "__main__":
 
@@ -77,6 +109,13 @@ if __name__ == "__main__":
         },
     ]
 
+    prompt = """
+I have three tasks:
+Medium Priority: feed the dog
+Low Priority: Feed the cat
+High Priority: feed the lion
+What shall I do first and next
+"""
     for model in [
         "gpt-3.5-turbo-0301",
         "gpt-3.5-turbo-0613",
@@ -87,16 +126,23 @@ if __name__ == "__main__":
         ]:
         print(model)
         # Example Token Count From The Function Defined Above
-        print(F"{num_tokens_from_messages(example_messages, model)} Prompt Tokens Counted By Num_Tokens_From_Messages().")
+        # print(F"{num_tokens_from_messages(example_messages, model)} Prompt Tokens Counted By Num_Tokens_From_Messages().")
+        print(F"{nb_tokens_in_prompt(prompt, model)} Prompt Tokens Counted by tiktoken.")
         # Example Token Count From The Openai Api
         response = openai.ChatCompletion.create(
-            model = model,
-            messages = example_messages,
+            model=model,
+            messages=prompt,
             temperature=0,
-            max_tokens=1,  # We're Only Counting Input Tokens Here, So Let's Not Waste Tokens On The Output
+            max_tokens=1
         )
+        # response = openai.ChatCompletion.create(
+        #     model = model,
+        #     messages = example_messages,
+        #     temperature=0,
+        #     max_tokens=1,  # We're Only Counting Input Tokens Here, So Let's Not Waste Tokens On The Output
+        # )
         print(f'Response:\n{response}')
-        print(F'{response["usage"]["prompt_tokens"]} Prompt Tokens Counted By The Openai Api.')
-        print(F'{response["usage"]["completion_tokens"]} Completion Tokens Counted By The Openai Api.')
-        print(F'{response["usage"]["total_tokens"]} Total Tokens Counted By The Openai Api.')
+        print(f'{response["usage"]["prompt_tokens"]} Prompt Tokens Counted By The Openai Api.')
+        print(f'{response["usage"]["completion_tokens"]} Completion Tokens Counted By The Openai Api.')
+        print(f'{response["usage"]["total_tokens"]} Total Tokens Counted By The Openai Api.')
         print()    
