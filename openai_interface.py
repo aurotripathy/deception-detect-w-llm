@@ -13,7 +13,7 @@ def init_openai():
     openai.api_key = os.environ["OPENAI_API_KEY"]  # source the ~/.zshrc file
 
 
-def get_chat_completion(prompt, model="gpt-3.5-turbo"):
+def get_chat_completion(prompt, model="gpt-3.5-turbo", temperature=0):
     # messages = [{"role": "user", "content": prompt}]
     messages = [{"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": prompt}]
@@ -21,9 +21,9 @@ def get_chat_completion(prompt, model="gpt-3.5-turbo"):
     response = openai.ChatCompletion.create(
         model=model,
         messages=messages,
-        temperature=0, # this is the degree of randomness of the model's output
+        temperature=temperature, # this is the degree of randomness of the model's output
     )
-    # print(f'response:\n{response}')
+    # print(f'>>>Raw Response:\n{response}')
     print(f'Prompt tokens counted:{response["usage"]["prompt_tokens"]} ')
     print(f'Completion tokens counted: {response["usage"]["completion_tokens"]}')
     print(f'Total tokens counted: {response["usage"]["total_tokens"]}')    
