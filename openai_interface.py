@@ -30,5 +30,5 @@ def get_chat_completion(prompt, model="gpt-3.5-turbo", temperature=0):
     return response.choices[0].message["content"]
 
 @retry(wait=wait_random_exponential(min=1, max=60), stop=stop_after_attempt(6))
-def get_chat_completion_with_backoff(prompt, model="gpt-3.5-turbo"):
-    return get_chat_completion(prompt, model)
+def get_chat_completion_with_backoff(prompt, model, temperature):
+    return get_chat_completion(prompt, model, temperature)
