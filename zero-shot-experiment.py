@@ -15,7 +15,10 @@ from utils.llm_generated_clues_reason_output import prep_output_df, save_output_
 
 init_openai()
 newline = '\n'
+model = 'gpt-4'  # "gpt-3.5-turbo" or "gpt-4"
 temperature = 0.5
+nb_attempts = 2
+sample_size = 2
 dataset_used = 'dataset/sign_events_data_statements.csv'
 classification_file = 'results/zero-shot-classification-with-clues-reasoning.csv'
 
@@ -24,7 +27,6 @@ df = pd.read_csv (dataset_used)
 # simple EDA
 split_index = 782
 dataset_count = df.shape[0]
-# print(df.columns)
 print(f'shape: {df.shape}')  # should be 1640 x 6
 # print(df.head)
 
@@ -66,16 +68,16 @@ EXAMPLE: TRUTHFUL and DECEPTIVE CATEGORIES and SUB-CATEGORIES and the IMPORTANCE
 
 def create_input(row):
     """
-    For now, conbine question 1 and question 2
+    For now, combine question 1 and question 2
+    Thre may be a need to weight them unequally
     """
-    return 'PARAGRAPH: ' + row['q1'] + '\n' + row['q2']
+    return 'PARAGRAPH:\n ' + row['q1'] + '\n' + row['q2']
 
 def construct_context(row, gt):
     """ 
     put the prelude and the response to q1 and q2 
     """
     context = ''
-    # print(create_prelude())
     context += create_prelude(gt)
     context += create_input(df.loc[row].copy())
     return context
@@ -83,42 +85,49 @@ def construct_context(row, gt):
 
 if __name__ == "__main__":
     ground_truths = []
-    gt_truthful_samples = sorted(random.sample(range(0, split_index), 10))
-    gt_deceptive_samples = sorted(random.sample(range(split_index, dataset_count), 10))
+    gt_truthful_samples = sorted(random.sample(range(0, split_index), sample_size))
+    gt_deceptive_samples = sorted(random.sample(range(split_index, dataset_count), sample_size))
     rows = gt_truthful_samples + gt_deceptive_samples
     print(f'Rows used to generate the clues + reasoning: {rows}')
     out_df = prep_output_df(dataset_used, ['contains_clues', 'clues', 'reasoning'])
 
-    model = 'gpt-3.5-turbo'  # "gpt-3.5-turbo" or "gpt-4"
     print(f'Model:{model}')
     ground_truths = []
     predictions = []
+    errors = []
     
     for row in rows:
         ground_truth = 'truthful' if df.loc[row]['outcome_class'] == 't' else 'deceptive'
-        print(f"{20*'-'} ROW:{row} GT: {ground_truth} {20*'-'}")
+        print(f"{20*'-'} ROW: {row} GT: {ground_truth} {20*'-'}")
         final_context = construct_context(row=row, gt=ground_truth)
-        print(final_context)
-        print(f'ground truth (GT): {ground_truth}')
-        # print(f'INPUT:\n Q1:\n {df.loc[row]["q1"]} \n Q2:\n {df.loc[row]["q2"]}')
+        print(f'FINAL CONTEXT:\n{final_context}')
 
         response = get_chat_completion_with_backoff(final_context, model, temperature)
-        try:
-            parsed_data = json.loads(response)
-            print(f"{20*'-'}Parsed Response{20*'-'}\n")
-            print(parsed_data['TRUTHFUL'])  # 
-            print(parsed_data['DECEPTIVE'])  # 
-            print(parsed_data['CLASSIFICATION'])  # 
-            print(parsed_data['REASONING'])  # 
+        for attempt in range(nb_attempts):
+            try:
+                parsed_data = json.loads(response)
+                print(f"{20*'-'}Parsed Response{20*'-'}\n")
+                print(f"TRUTHFUL CLUES:\n{parsed_data['TRUTHFUL']}")
+                print(f"DECEPTIVE CLUES:\n{parsed_data['DECEPTIVE']}") 
+                print(f"CLASSIFICATION\n{parsed_data['CLASSIFICATION']}") 
+                print(f"REASONING:\n{parsed_data['REASONING']}")
 
-            out_df = parse_n_write_response(response, out_df, row)
-            ground_truths.append(ground_truth)
-            predictions.append(parsed_data['CLASSIFICATION'])
-        except:
-            print(f'Parse failure of response in row: {row} \nFinal context: {final_context} \nResponse: {response}')
+                out_df = parse_n_write_response(response, out_df, row)
+                ground_truths.append(ground_truth)
+                predictions.append(parsed_data['CLASSIFICATION'])
+                break
+            except:
+                if attempt == nb_attempts -1:
+                    print(f'Failed to parse response in row, NO MORE ATTEMPTS: {row} \nResponse:\n{response}')
+                    errors.append(f'Failed to parse response in row, NO MORE ATTEMPTS: {row} \nResponse:\n{response}')
+                else:
+                    print(f'Failed to parse response in row, RETRYING...: {row} \nResponse:\n{response}')
+
 
 for ground_truth, prediction in zip(ground_truths, predictions):
     print(f'GT: {ground_truth}, Pred: {prediction}')
+for error in errors:
+    print(error)
 
 from sklearn.metrics import f1_score
 print('Weighted F1-score:', f1_score(ground_truths, predictions, average='weighted'))
