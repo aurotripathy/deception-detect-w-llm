@@ -31,15 +31,15 @@ def parse_n_write_response(response, df, row):
     except:
         print(f'Encountered a parsing exception!')
     
-    print(f'-------------row: {row}----------------')
-    print(parse['TRUTHFUL'])
-    print(parse['DECEPTIVE'])
-    print(parse['REASONING'])
-    print(parse['CLASSIFICATION'])
+    # print(f'-------------row: {row}----------------')
+    # print(parse['TRUTHFUL'])
+    # print(parse['DECEPTIVE'])
+    # print(parse['REASONING'])
+    # print(parse['CLASSIFICATION'])
     classification_dict = {"classification":  'truthful' if df.loc[row]['outcome_class'] == 't' else 'deceptive'}
     clues_dict = {"CLUES": {"TRUTHFUL": parse['TRUTHFUL'], "DECEPTIVE": parse['DECEPTIVE']}}
     reasoning_dict = {"REASONING": parse['REASONING']}
-    print(clues_dict)
+    # print(clues_dict)
     copy_df = df.copy(deep=True)
     copy_df.at[row, 'contains_clues'] = 1
     copy_df.at[row, 'clues'] = json.dumps(clues_dict)
