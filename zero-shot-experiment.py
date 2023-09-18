@@ -12,13 +12,14 @@ import random
 import json
 from utils.openai_interface import init_openai, get_chat_completion_with_backoff
 from utils.llm_generated_clues_reason_output import prep_output_df, save_output_df, parse_n_write_response
+import pprint
 
 init_openai()
 newline = '\n'
 model = 'gpt-4'  # "gpt-3.5-turbo" or "gpt-4"
 temperature = 0.5
 nb_attempts = 2
-sample_size = 2
+sample_size = 5
 dataset_used = 'dataset/sign_events_data_statements.csv'
 classification_file = 'results/zero-shot-classification-with-clues-reasoning.csv'
 
@@ -107,10 +108,10 @@ if __name__ == "__main__":
             try:
                 parsed_data = json.loads(response)
                 print(f"{20*'-'}Parsed Response{20*'-'}\n")
-                print(f"TRUTHFUL CLUES:\n{parsed_data['TRUTHFUL']}")
-                print(f"DECEPTIVE CLUES:\n{parsed_data['DECEPTIVE']}") 
-                print(f"CLASSIFICATION\n{parsed_data['CLASSIFICATION']}") 
-                print(f"REASONING:\n{parsed_data['REASONING']}")
+                print(f"TRUTHFUL CLUES:\n{pprint.pformat(parsed_data['TRUTHFUL'], width=80)}")
+                print(f"DECEPTIVE CLUES:\n{pprint.pformat(parsed_data['DECEPTIVE'], width=80)}") 
+                print(f"CLASSIFICATION:\nPREDICTED: {parsed_data['CLASSIFICATION']} GT: {ground_truth}") 
+                print(f"REASONING:\n{pprint.pformat(parsed_data['REASONING'], width=80)}")
 
                 out_df = parse_n_write_response(response, out_df, row)
                 ground_truths.append(ground_truth)
@@ -126,8 +127,10 @@ if __name__ == "__main__":
 
 for ground_truth, prediction in zip(ground_truths, predictions):
     print(f'GT: {ground_truth}, Pred: {prediction}')
-for error in errors:
-    print(error)
+
+if len(errors) > 0:
+    for error in errors:
+        print(error)
 
 from sklearn.metrics import f1_score
 print('Weighted F1-score:', f1_score(ground_truths, predictions, average='weighted'))
