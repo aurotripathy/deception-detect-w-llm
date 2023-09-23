@@ -66,6 +66,7 @@ if __name__ == "__main__":
     print(f'Model:{model}')
     ground_truths = []
     predictions = []
+    rows_used = []
     errors = []
     
     for row in rows:
@@ -87,6 +88,7 @@ if __name__ == "__main__":
                 out_df = parse_n_write_response(response, out_df, row)
                 ground_truths.append(ground_truth)
                 predictions.append(parsed_data['CLASSIFICATION'])
+                rows_used.append(row)
                 break
             except:
                 if attempt == nb_attempts -1:
@@ -96,8 +98,8 @@ if __name__ == "__main__":
                     print(f'Failed to parse response in row, RETRYING...: {row} \nResponse:\n{response}')
 
 
-for ground_truth, prediction in zip(ground_truths, predictions):
-    print(f'GT: {ground_truth}, Pred: {prediction}')
+for ground_truth, prediction, row_used in zip(ground_truths, predictions, rows_used):
+    print(f'Row used: {row_used}, GT: {ground_truth}, Pred: {prediction}')
 
 if len(errors) > 0:
     for error in errors:
