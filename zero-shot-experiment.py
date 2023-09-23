@@ -12,6 +12,7 @@ import random
 import json
 from utils.openai_interface import init_openai, get_chat_completion_with_backoff
 from utils.llm_generated_clues_reason_output import prep_output_df, save_output_df, parse_n_write_response
+from prompt_preludes import load_prompt_prelude
 import pprint
 
 init_openai()
@@ -34,37 +35,7 @@ print(f'shape: {df.shape}')  # should be 1640 x 6
 # not puting any limit on the 'reasoning' word-count 
 
 def create_prelude(gt):
-    prelude = """
-In the PARAGRAPH section below:
-First, extract words or phrases related to the TRUTHFUL and DECEPTIVE categories and sub-categories using the EXAMPLE section as a guide.
-Next, provide detailed reasons as to why the PARAGRAPH is TRUTHFUL or DECEPTIVE based on values you extracted in each sub-categories. 
-Pay special attention to 'importance' to decide which class the PARAGRAPH belongs to. 
-Treat each sub-category within the two categories based on the 'importance' key.
-Finally, in one word, make a final classification on whether the paragraph is TRUTHFUL or DECEPTIVE. 
-Generate the response in only the JSON format with keys, "TRUTHFUL", "DECEPTIVE", "REASONING", "CLASSIFICATION".
-In the response, list each sub-category even if it's empty and include its importance.
-The key for the subcategory must be 'extracted' 
-The CLASSIFICATION key can have only two values, 'truthful' or 'deceptive'
-
-EXAMPLE: TRUTHFUL and DECEPTIVE CATEGORIES and SUB-CATEGORIES and the IMPORTANCE of each SUB-CATEGORY
-{"TRUTHFUL": 
-    {"ingestion": { "examples": ["dish", "eat", "pizza"], "importance": "high" }, 
-     "biological-processes": { "examples": ["eat", "blood", "pain"], "importance": "medium" }, 
-     "numbers": { "examples": ["second", "thousand", "5", "10"], "importance": "medium" }, 
-     "leisure": { "examples": ["cook", "chat", "movie"], "importance": "medium" }, 
-     "future-focus": { "examples": ["may", "will", "soon"], "importance": "medium" } 
-    }, 
- "DECEPTIVE": 
-    {"apostrophes": { "examples": ["haven't", "won't", "she's", "can't"], "importance": "high" }, 
-     "past-tense-focused": { "examples": ["ago", "did", "talked", "promised", "gotten"], "importance": "high" }, 
-     "reward": { "examples": ["congratulate", "accomplishment", "take", "prize", "benefit"], "importance": "high" }, 
-     "pronouns": { "examples": ["I", "them", "itself"], "importance": "high" }, 
-     "personal-pronouns": { "examples": ["I", "them", "her"], "importance": "high" }, 
-     "exclamation-mark": { "examples": ["!"], "importance": "high" } 
-    } 
-} 
-    """
-
+    prelude = load_prompt_prelude()
     return prelude + newline
 
 def create_input(row):
