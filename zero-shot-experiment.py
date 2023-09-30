@@ -14,18 +14,16 @@ from utils.openai_interface import init_openai, get_chat_completion_with_backoff
 from utils.llm_generated_clues_reason_output import prep_output_df, save_output_df, parse_n_write_response
 from prompt_preludes import load_prompt_prelude
 import pprint
+from config import Configuration
+import pandas as pd
 
 init_openai()
 newline = '\n'
-model = 'gpt-4'  # "gpt-3.5-turbo" or "gpt-4"
-temperature = 0.5
-nb_attempts = 2
-sample_size = 5
-dataset_used = 'dataset/sign_events_data_statements.csv'
-classification_file = 'results/zero-shot-classification-with-clues-reasoning.csv'
 
-import pandas as pd
-df = pd.read_csv (dataset_used)
+config = Configuration()
+config.print_config()
+
+df = pd.read_csv (config.dataset_used)
 # simple EDA
 split_index = 782
 dataset_count = df.shape[0]
@@ -57,13 +55,14 @@ def construct_context(row, gt):
 
 if __name__ == "__main__":
     ground_truths = []
-    gt_truthful_samples = sorted(random.sample(range(0, split_index), sample_size))
-    gt_deceptive_samples = sorted(random.sample(range(split_index, dataset_count), sample_size))
+    gt_truthful_samples = sorted(random.sample(range(0, split_index), config.sample_size))
+    gt_deceptive_samples = sorted(random.sample(range(split_index, dataset_count), config.sample_size))
     rows = gt_truthful_samples + gt_deceptive_samples
-    print(f'Rows used to generate the clues + reasoning: {rows}')
-    out_df = prep_output_df(dataset_used, ['contains_clues', 'clues', 'reasoning'])
 
-    print(f'Model:{model}')
+    print(f'Rows used to generate the clues + reasoning: {rows}')
+    out_df = prep_output_df(config.dataset_used, ['contains_clues', 'clues', 'reasoning'])
+
+    print(f'Model:{config.model}')
     ground_truths = []
     predictions = []
     rows_used = []
@@ -75,8 +74,9 @@ if __name__ == "__main__":
         final_context = construct_context(row=row, gt=ground_truth)
         print(f'FINAL CONTEXT:\n{final_context}')
 
-        response = get_chat_completion_with_backoff(final_context, model, temperature)
-        for attempt in range(nb_attempts):
+        response = get_chat_completion_with_backoff(final_context, 
+                                                    config.system_role, config.model, config.temperature)
+        for attempt in range(config.nb_attempts):
             try:
                 parsed_data = json.loads(response)
                 print(f"{20*'-'}Parsed Response{20*'-'}\n")
@@ -87,11 +87,11 @@ if __name__ == "__main__":
 
                 out_df = parse_n_write_response(response, out_df, row)
                 ground_truths.append(ground_truth)
-                predictions.append(parsed_data['CLASSIFICATION'])
+                predictions.append(str.lower(parsed_data['CLASSIFICATION']))
                 rows_used.append(row)
                 break
             except:
-                if attempt == nb_attempts -1:
+                if attempt == config.nb_attempts -1:
                     print(f'Failed to parse response in row, NO MORE ATTEMPTS: {row} \nResponse:\n{response}')
                     errors.append(f'Failed to parse response in row, NO MORE ATTEMPTS: {row} \nResponse:\n{response}')
                 else:
@@ -107,4 +107,4 @@ if len(errors) > 0:
 
 from sklearn.metrics import f1_score
 print('Weighted F1-score:', f1_score(ground_truths, predictions, average='weighted'))
-save_output_df(classification_file, out_df)
+save_output_df(config.classification_file, out_df)
