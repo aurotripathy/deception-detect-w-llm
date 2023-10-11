@@ -51,6 +51,7 @@ def collect_all_files_and_dirs(directory):
 def collect_all_files(directory, attribute):
     """
     Recursively collect all file names in a directory and its subdirectories.
+    Apply 'attribute' filter
     Does not include dir names.
     Pick up only text files
     """
