@@ -33,7 +33,7 @@ Apply each criteria to the STATEMENT below.
 Count the number of times the criteria has been met.
 Give your  answer in two parts. 
 
-Your response is in the JSON format with three keys, 'analysis', 'criteria-count', and 'sentiment'.
+Your response must be in the JSON format with three keys, 'analysis', 'criteria-count', and 'sentiment'.
 The 'analysis' key has value containing your detailed analysis of each criteria and whether the criteria has been met.
 The 'count' key has a value contains the count of the times the criteria has been met.  
 The 'sentiment' key has value containing either 'truthful' or 'deceptive' strictly based on the criteria set above. If any criteria is met, you must declare the statement is 'deceptive'. 
