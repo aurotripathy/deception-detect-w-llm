@@ -22,23 +22,24 @@ from utils.openai_interface import init_openai, get_chat_completion_with_backoff
 from config import Configuration
 
 context_prelude = """
-Any one of the three criteria below is sufficient to label a statement as 'deceptive':
-1. Deceptive statements are moderately descriptive.
+Any one of the criteria below is sufficient to label a statement as 'deceptive':
+1. Deceptive statements are low to moderately descriptive.
 2. Deceptive statements distance themselves from self. 
-3. Deceptive statements are more negative.
-4. Deceptive statements are overwhelmingly positive
+3. Deceptive statements are moderately negative.
+4. Deceptive statements are overwhelmingly positive with exclamation amrks and capital letters
 
 Is the STATEMENT below deceptive or truthful?
 Reason step by step.
 Apply each criteria to the STATEMENT below. 
 Count the number of times the criteria has been met.
-Give your  answer in two parts. 
 
 Your response must be in the JSON format with three keys, 'analysis', 'criteria-count', and 'sentiment'.
 The 'analysis' key has value containing your detailed analysis of each criteria and whether the criteria has been met. 
-The criteria keys are 'degree-of-descriptiveness', 'distancing-from-self', 'sentiment', 'overwhelmingly-positive'
-The 'count' key has a value contains the count of the times the criteria has been met.  
-The 'veracity' key has value containing either 'truthful' or 'deceptive' strictly based on the criteria set above. If any criteria is met, you must declare the statement is 'deceptive'. 
+The criteria keys are 'moderately-descriptive', 'distancing-from-self', 'moderately-negative', 'overwhelmingly-positive'.
+Each criteria key has two sub-keys, a 'rationale' containing the reason and a sub-key named 'criteria-met' with value either 'true' or 'false'
+The 'count' key must contain a numeric value that is the count of the times the criteria has been met.  
+The 'veracity' key has value containing either 'truthful' or 'deceptive' strictly based on the criteria set above. 
+If any criteria is met, you must declare the statement is 'deceptive'. 
 """
 
 import random
@@ -52,7 +53,7 @@ from utils.read_gold_dataset import collect_all_files, read_a_file
 init_openai()
 newline = '\n'
 
-config = Configuration()
+config = Configuration(temperature=1, sample_size=5)
 config.print_config()
 
 def create_prelude():
@@ -79,21 +80,20 @@ def construct_context(file_path):
 
 if __name__ == "__main__":
     root_dir = '/home/auro/deception/spam-dataset/op_spam_v1.4'
-    file_path_list = collect_all_files(root_dir, 'deceptive')
+    file_path_list = collect_all_files(root_dir, 'truthful')
     total_samples = len(file_path_list)
 
     sample_indices = sorted(random.sample(range(0, total_samples), config.sample_size))
     
-    print(f'Files indices used to generate the clues + reasoning: {sample_indices}')
+    print(f'Files indices used in the analysis: {sample_indices}')
 
-    print(f'Model:{config.model}')
     ground_truths = []
     predictions = []
-    rows_used = []
+    files_used = []
     errors = []
     
     for sample in sample_indices:
-        sentiment, veracity, text = read_a_file(file_path_list[sample])
+        gt_sentiment, gt_veracity, text = read_a_file(file_path_list[sample])
         
         final_context = construct_context(file_path_list[sample])
 
@@ -103,8 +103,9 @@ if __name__ == "__main__":
             response = get_chat_completion_with_backoff(final_context, 
                                                         config.system_role, config.model, config.temperature)
             print(response)
-            print(f'sentiment: {sentiment}, veracity: {veracity}')
-            try:
+            print(f'{10*"-"}')
+            print(f'Ground Truth:: sentiment: {gt_sentiment}, veracity: {gt_veracity}')
+            try:  # valid json
                 parsed_data = json.loads(response)
                 break
             except:
@@ -112,10 +113,10 @@ if __name__ == "__main__":
                     print(f'Failed to parse response in row, NO MORE ATTEMPTS: {sample} \nResponse:\n{response}')
                     errors.append(f'Failed to parse response in row, NO MORE ATTEMPTS: {sample} \nResponse:\n{response}')
                 else:
-                    print(f'Failed to parse response in row, RETRYING...: {sampe} \nResponse:\n{response}')
+                    print(f'Failed to parse response in row, RETRYING...: {sample} \nResponse:\n{response}')
 
 
-for ground_truth, prediction, row_used in zip(ground_truths, predictions, rows_used):
+for ground_truth, prediction, row_used in zip(ground_truths, predictions, files_used):
     print(f'Row used: {row_used}, GT: {ground_truth}, Pred: {prediction}')
 
 if len(errors) > 0:
