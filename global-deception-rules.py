@@ -1,5 +1,5 @@
 """
-Research proves LIWC to be successful in detecting deception. 
+The premis: Research proves LIWC to be successful in detecting deception. 
 "Deceptive statements compared with truthful ones are:
 - moderately descriptive, 
 - distanced from self, and 
@@ -21,11 +21,12 @@ import json
 from utils.openai_interface import init_openai, get_chat_completion_with_backoff
 from config import Configuration
 
-context_primed = """
-Any criteria below is sufficient to label a statement as deceptive:
-- Deceptive statements are moderately to highly descriptive.
-- Deceptive statements distance themselves from self. 
-- Deceptive statements are more negative.
+context_prelude = """
+Any one of the three criteria below is sufficient to label a statement as 'deceptive':
+1. Deceptive statements are moderately descriptive.
+2. Deceptive statements distance themselves from self. 
+3. Deceptive statements are more negative.
+4. Deceptive statements are overwhelmingly positive
 
 Is the STATEMENT below deceptive or truthful?
 Reason step by step.
@@ -34,26 +35,90 @@ Count the number of times the criteria has been met.
 Give your  answer in two parts. 
 
 Your response must be in the JSON format with three keys, 'analysis', 'criteria-count', and 'sentiment'.
-The 'analysis' key has value containing your detailed analysis of each criteria and whether the criteria has been met.
+The 'analysis' key has value containing your detailed analysis of each criteria and whether the criteria has been met. 
+The criteria keys are 'degree-of-descriptiveness', 'distancing-from-self', 'sentiment', 'overwhelmingly-positive'
 The 'count' key has a value contains the count of the times the criteria has been met.  
-The 'sentiment' key has value containing either 'truthful' or 'deceptive' strictly based on the criteria set above. If any criteria is met, you must declare the statement is 'deceptive'. 
-
-STATEMENT
-I stayed at the hotel during the Dave Matthews Caravan tour and would come home each night rather dusty/dirty from being at an outdoor concert with 200,000 of \
-my closest friends. I used half a bottle of shampoo the first night. The second night, the staff had not refreshed my bar soap or shampoo. I informed the front\
- desk who made apologies and said they would take care of it immediately. I got home that night with a tiny tiny bar of soap (hand soap) for the bath/shower an\
-d they had replaced the shampoo in its original place, nicely displayed, but with the EXACT SAME bottle of shampoo that was now 1/8 full. Yeah!! The hotel is i\
-n a great location to Navy Pier and Michigan Ave....I'll grant them that....but that's where their "pros" end. I'd rather stay at a Hampton Inn. I would not re\
-commend this hotel to anyone. 
+The 'veracity' key has value containing either 'truthful' or 'deceptive' strictly based on the criteria set above. If any criteria is met, you must declare the statement is 'deceptive'. 
 """
 
-init_openai()
+import random
+import json
+from utils.openai_interface import init_openai, get_chat_completion_with_backoff
+from utils.llm_generated_clues_reason_output import prep_output_df, save_output_df, parse_n_write_response
+import pprint
+from config import Configuration
+from utils.read_gold_dataset import collect_all_files, read_a_file
 
-config = Configuration(temperature=0.2)
+init_openai()
+newline = '\n'
+
+config = Configuration()
 config.print_config()
 
+def create_prelude():
+    prelude = context_prelude
+    return prelude + newline
 
-response = get_chat_completion_with_backoff(context_primed, 
-                                            config.system_role, config.model, config.temperature)
+def create_input(file_path):
+    """
+    For now, combine question 1 and question 2
+    Thre may be a need to weight them unequally
+    """
+    _, _, text = read_a_file(file_path)
+    return 'STATEMENT:\n ' + text
 
-print(response)
+def construct_context(file_path):
+    """ 
+    put the prelude and the response to q1 and q2 
+    """
+    context = ''
+    context += create_prelude()
+    context += create_input(file_path)
+    return context
+
+
+if __name__ == "__main__":
+    root_dir = '/home/auro/deception/spam-dataset/op_spam_v1.4'
+    file_path_list = collect_all_files(root_dir, 'deceptive')
+    total_samples = len(file_path_list)
+
+    sample_indices = sorted(random.sample(range(0, total_samples), config.sample_size))
+    
+    print(f'Files indices used to generate the clues + reasoning: {sample_indices}')
+
+    print(f'Model:{config.model}')
+    ground_truths = []
+    predictions = []
+    rows_used = []
+    errors = []
+    
+    for sample in sample_indices:
+        sentiment, veracity, text = read_a_file(file_path_list[sample])
+        
+        final_context = construct_context(file_path_list[sample])
+
+        print(f'FINAL CONTEXT:\n{final_context}')
+
+        for attempt in range(config.nb_attempts):
+            response = get_chat_completion_with_backoff(final_context, 
+                                                        config.system_role, config.model, config.temperature)
+            print(response)
+            print(f'sentiment: {sentiment}, veracity: {veracity}')
+            try:
+                parsed_data = json.loads(response)
+                break
+            except:
+                if attempt == config.nb_attempts -1:
+                    print(f'Failed to parse response in row, NO MORE ATTEMPTS: {sample} \nResponse:\n{response}')
+                    errors.append(f'Failed to parse response in row, NO MORE ATTEMPTS: {sample} \nResponse:\n{response}')
+                else:
+                    print(f'Failed to parse response in row, RETRYING...: {sampe} \nResponse:\n{response}')
+
+
+for ground_truth, prediction, row_used in zip(ground_truths, predictions, rows_used):
+    print(f'Row used: {row_used}, GT: {ground_truth}, Pred: {prediction}')
+
+if len(errors) > 0:
+    for error in errors:
+        print(error)
+
