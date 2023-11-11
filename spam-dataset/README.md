@@ -1,11 +1,11 @@
 ##### Dataset
-The dataset location: https://myleott.com/op-spam.html
+The dataset location: [Deceptive Opinion Spam Corpus v1.4](https://myleott.com/op-spam.html)
 
 ##### Overview
 
 This corpus consists of truthful and deceptive hotel reviews of 20 Chicago hotels. 
 
-This corpus contains:
+The breakdown is below:
 
     400 truthful positive reviews from TripAdvisor 
     400 deceptive positive reviews from Mechanical Turk 
