@@ -1,5 +1,5 @@
 ##### Dataset
-The dataset location: https://myleott.com/op-spam.html
+The dataset location: [Deceptive Opinion Spam Corpus v1.4](https://myleott.com/op-spam.html)
 
 ##### Overview
 
