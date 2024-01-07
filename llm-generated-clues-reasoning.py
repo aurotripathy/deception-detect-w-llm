@@ -35,8 +35,8 @@ print(df.iloc[782:784]['outcome_class'])  # note the cross-ver of the 'outcome_c
 newline = '\n'
 system_role_content = f"""
 You are an expert in Linguistic Inquiry Word Count (LIWC) analysis. 
-Your job is to provide reasons for why statements are classified TRUTHFUL or DECEPTIVE. 
-You'll be provided the LIWC categories that are helpful factors is deciding whether a statement is TRUTHFUL or DECEPTIVE. 
+Your job is to provide reasons for why a statement is classified as either TRUTHFUL or DECEPTIVE. 
+You'll be provided the LIWC categories that are helpful factors is deciding whether the statement is either TRUTHFUL or DECEPTIVE. 
 """
 
 def create_prelude(gt, not_of_gt):
@@ -92,8 +92,8 @@ def construct_context(row, gt, not_of_gt):
 
 if __name__ == "__main__":
     ground_truths = []
-    truth_start_row, truth_end_row = 0, 0
-    deceptive_start_row, deceptive_end_row = 783, 784
+    truth_start_row, truth_end_row = 10, 11
+    deceptive_start_row, deceptive_end_row = 883, 884
     rows = list(range(truth_start_row, truth_end_row))
     rows += list(range(deceptive_start_row, deceptive_end_row))
     print(f'Rows used to generate the clues + reasoning: {rows}')
